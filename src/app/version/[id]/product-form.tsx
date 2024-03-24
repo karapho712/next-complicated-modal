@@ -3,35 +3,80 @@ import {
   AccordionContent,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { AccordionItem } from "@radix-ui/react-accordion";
+import Image from "next/image";
 import React from "react";
-import { SelectProductModal } from "./select-prodduct-modal";
+import {
+  useFieldArray,
+  useFormContext,
+} from "react-hook-form";
+import { SelectProductModal } from "./select-product-modal";
 
 export const ProductForm = () => {
+  const formMethods = useFormContext();
+  const { fields } = useFieldArray({
+    control: formMethods.control,
+    name: "items",
+  });
+
+  const group = formMethods.watch("group");
+
   return (
     <div>
       {/* START Modal Compnent Here */}
-      <SelectProductModal />
+      <SelectProductModal group={group} />
       {/* END Modal Compnent Here */}
 
-      <Accordion type="multiple" className="w-full">
-        <AccordionItem value="item-1">
-          <AccordionTrigger>
-            Is it accessible?
-          </AccordionTrigger>
-          <AccordionContent>
-            Yes. It adheres to the WAI-ARIA design pattern.
-          </AccordionContent>
-        </AccordionItem>
-        <AccordionItem value="item-2">
-          <AccordionTrigger>
-            Is it accessible?
-          </AccordionTrigger>
-          <AccordionContent>
-            Yes. It adheres to the WAI-ARIA design pattern.
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+      {fields.map((field, index) => {
+        const { product } = field;
+
+        return (
+          <Accordion
+            type="multiple"
+            className="w-full"
+            key={product.id}
+          >
+            <AccordionItem value={product.id}>
+              <AccordionTrigger>
+                <Image
+                  src={"/next.svg"}
+                  width={40}
+                  height={40}
+                  alt={product.name}
+                  className="mx-2"
+                />
+                <div className="inline-block">
+                  <p>{product.name}</p>
+                  <p>{product.type}</p>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <FormField
+                  control={formMethods.control}
+                  name={`items.${index}.comment`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Leave your instructions here:
+                      </FormLabel>
+                      <FormControl>
+                        <Input {...field} type="text" />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        );
+      })}
     </div>
   );
 };

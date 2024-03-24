@@ -64,23 +64,41 @@ export const Page = ({
 }: {
   params: { id: string };
 }) => {
-  const [showItemDetail, setShowItemDetail] =
+  const [showTableGroup, setShowTableGroup] =
+    useState(true);
+  const [showTableVersionList, setShowTableVersionList] =
     useState(false);
-  const [selectedItem, setSelectedItem] =
-    useState<any>(null); // Define proper type for selectedItem
+  const [showSkinFormRoutine, setShowSkinFormRoutine] =
+    useState(false);
 
-  console.log(selectedItem);
+  const [selectedItem, setSelectedItem] = useState<any>();
 
-  // Function to handle showing item details
-  const handleShowItem = (item: any) => {
+  const handleShowTableVersionList = (item: any) => {
     setSelectedItem(item);
-    setShowItemDetail(true);
+    setShowTableGroup(false);
+    setShowTableVersionList(true);
   };
 
   // Function to handle hiding item details
-  const handleHideItem = () => {
-    setSelectedItem(null);
-    setShowItemDetail(false);
+  const handleShowTableGroup = () => {
+    setSelectedItem([]);
+    setShowTableGroup(true);
+    setShowTableVersionList(false);
+  };
+
+  // Function to handle showing SkinRoutineForm and hiding DataTable
+  const handleNewRoutine = ({
+    skinRoutineForm,
+    tableGroup,
+    tableVersionList,
+  }: {
+    skinRoutineForm: boolean;
+    tableGroup: boolean;
+    tableVersionList: boolean;
+  }) => {
+    setShowSkinFormRoutine(skinRoutineForm);
+    setShowTableGroup(tableGroup);
+    setShowTableVersionList(tableVersionList);
   };
 
   const columns: ColumnDef<UserProduct>[] = [
@@ -100,19 +118,15 @@ export const Page = ({
       cell: (info) => info.getValue(),
     },
     {
-      header: "published",
-      accessorKey: "isPublished",
-      cell: (info) =>
-        info.getValue() ? <p>Benar</p> : <p>Salah</p>,
-    },
-    {
       id: "actiongroup",
       header: "Action",
       accessorKey: "group",
       cell: (info) => {
         return (
           <Button
-            onClick={() => handleShowItem(info.getValue())}
+            onClick={() =>
+              handleShowTableVersionList(info.getValue())
+            }
           >
             Show Item
           </Button>
@@ -143,31 +157,54 @@ export const Page = ({
       <div className="flex justify-center">
         {/* <div className="bg-red-300">Component</div> */}
         <div className="">
-          <Button
-            onClick={() => {
-              console.log("test");
-            }}
-            className="bg-slate-900"
-          >
-            <PlusCircle className="mr-1" />
-            New Routine
-          </Button>
+          {!showSkinFormRoutine && (
+            <Button
+              onClick={() => {
+                handleNewRoutine({
+                  skinRoutineForm: true,
+                  tableGroup: false,
+                  tableVersionList: false,
+                });
+              }}
+              className="bg-slate-900"
+            >
+              <PlusCircle className="mr-1" />
+              New Routine
+            </Button>
+          )}
+
+          {showSkinFormRoutine && (
+            <Button
+              onClick={() => {
+                handleNewRoutine({
+                  skinRoutineForm: false,
+                  tableGroup: true,
+                  tableVersionList: false,
+                });
+              }}
+              className="bg-slate-900"
+            >
+              Back
+            </Button>
+          )}
         </div>
       </div>
       {/* Main DataTable */}
-      {!showItemDetail && (
+      {showTableGroup && (
         <DataTable data={data} columns={columns} />
       )}
-      {showItemDetail && selectedItem && (
+      {showTableVersionList && (
         <div>
-          <Button onClick={handleHideItem}>Back</Button>
+          <Button onClick={handleShowTableGroup}>
+            Back
+          </Button>
           <p>Item Detail:</p>
 
           <VersionList groups={selectedItem} />
         </div>
       )}
-
-      <SkinRoutineForm />
+      {/* Render SkinRoutineForm if showSkinRoutineForm is true */}
+      {showSkinFormRoutine && <SkinRoutineForm />}
     </div>
   );
 };
