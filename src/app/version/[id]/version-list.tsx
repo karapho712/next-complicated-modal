@@ -137,7 +137,7 @@ export const VersionList = ({
           ]}
         />
       )}
-      {!isEmpty(showSkinRoutineForm) && <SkinRoutineForm />}
+      {/* {!isEmpty(showSkinRoutineForm) && <SkinRoutineForm />} */}
     </div>
   );
 };

@@ -4,7 +4,7 @@ import { useFetchUserProducts } from "@/hooks/user/useFetchUserProduct";
 import { useFetchUserProductType } from "@/hooks/user/useFetchUserProductType";
 import { useFetchUsers } from "@/hooks/user/useFetchUsers";
 import { ColumnDef } from "@tanstack/react-table";
-import { Plus, PlusCircle } from "lucide-react";
+import { ArrowLeft, Plus, PlusCircle } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import {
   User,
@@ -14,50 +14,6 @@ import {
 import { DataTable } from "../../_components/data-table";
 import { SkinRoutineForm } from "./skin-routine-form";
 import { VersionList } from "./version-list";
-
-interface ItemDetailTableProps {
-  items: UserProduct["items"];
-  onClose: () => void;
-}
-
-const ItemDetailTable: React.FC<ItemDetailTableProps> = ({
-  items,
-  onClose,
-}) => {
-  return (
-    <div>
-      <button onClick={onClose}>Back</button>
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Comment</th>
-            <th>Order</th>
-            <th>Product Name</th>
-            <th>Product Type</th>
-            <th>Product Description</th>
-            <th>Product Comment</th>
-            <th>Image URL</th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((item) => (
-            <tr key={item.id}>
-              <td>{item.id}</td>
-              <td>{item.comment}</td>
-              <td>{item.order}</td>
-              <td>{item.product.name}</td>
-              <td>{item.product.type}</td>
-              <td>{item.product.description}</td>
-              <td>{item.product.comment}</td>
-              <td>{item.product.imageUrl}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-};
 
 export const Page = ({
   params,
@@ -71,32 +27,35 @@ export const Page = ({
   const [showSkinFormRoutine, setShowSkinFormRoutine] =
     useState(false);
 
-  const [selectedItem, setSelectedItem] = useState<any>();
-  console.log(selectedItem);
+  const [selectedGroup, setSelectedGroup] = useState<any>();
+  console.log(selectedGroup);
 
   const handleShowTableVersionList = (item: any) => {
-    setSelectedItem(item);
+    setSelectedGroup(item);
     setShowTableGroup(false);
     setShowTableVersionList(true);
   };
 
   // Function to handle hiding item details
   const handleShowTableGroup = () => {
-    setSelectedItem([]);
+    setSelectedGroup(undefined);
     setShowTableGroup(true);
     setShowTableVersionList(false);
   };
 
   // Function to handle showing SkinRoutineForm and hiding DataTable
-  const handleNewRoutine = ({
+  const handleShowTableAndForm = ({
     skinRoutineForm,
     tableGroup,
     tableVersionList,
+    selectedGroup,
   }: {
     skinRoutineForm: boolean;
     tableGroup: boolean;
     tableVersionList: boolean;
+    selectedGroup: any;
   }) => {
+    setSelectedGroup(selectedGroup);
     setShowSkinFormRoutine(skinRoutineForm);
     setShowTableGroup(tableGroup);
     setShowTableVersionList(tableVersionList);
@@ -125,9 +84,16 @@ export const Page = ({
       cell: (info) => {
         return (
           <Button
-            onClick={() =>
-              handleShowTableVersionList(info.getValue())
-            }
+            onClick={() => {
+              console.log(info.getValue());
+
+              return handleShowTableAndForm({
+                tableVersionList: true,
+                skinRoutineForm: false,
+                tableGroup: false,
+                selectedGroup: info.getValue(),
+              });
+            }}
           >
             Show Item
           </Button>
@@ -153,41 +119,31 @@ export const Page = ({
     );
   }
 
+  console.log(selectedGroup);
+
   return (
     <div className="p-2">
       <div className="flex justify-center">
         {/* <div className="bg-red-300">Component</div> */}
         <div className="">
-          {!showSkinFormRoutine && (
-            <Button
-              onClick={() => {
-                handleNewRoutine({
-                  skinRoutineForm: true,
-                  tableGroup: false,
-                  tableVersionList: false,
-                });
-              }}
-              className="bg-slate-900"
-            >
+          <Button
+            onClick={() => {
+              handleShowTableAndForm({
+                skinRoutineForm: !showSkinFormRoutine,
+                tableGroup: showSkinFormRoutine,
+                tableVersionList: false,
+                selectedGroup: undefined,
+              });
+            }}
+            className="bg-slate-900"
+          >
+            {showSkinFormRoutine ? (
+              <ArrowLeft className="mr-1" />
+            ) : (
               <PlusCircle className="mr-1" />
-              New Routine
-            </Button>
-          )}
-
-          {showSkinFormRoutine && (
-            <Button
-              onClick={() => {
-                handleNewRoutine({
-                  skinRoutineForm: false,
-                  tableGroup: true,
-                  tableVersionList: false,
-                });
-              }}
-              className="bg-slate-900"
-            >
-              Back
-            </Button>
-          )}
+            )}
+            {showSkinFormRoutine ? "Back" : "New Routine"}
+          </Button>
         </div>
       </div>
       {/* Main DataTable */}
@@ -196,12 +152,35 @@ export const Page = ({
       )}
       {showTableVersionList && (
         <div>
-          <Button onClick={handleShowTableGroup}>
+          <Button
+            onClick={() => {
+              console.log("test");
+              // let handleTableVersionList = false;
+              // let handleTableGroup = false;
+
+              // if (selectedGroup) {
+              //   console.log(selectedGroup);
+              //   handleTableVersionList = true;
+              // }
+
+              handleShowTableAndForm({
+                selectedGroup: undefined,
+                skinRoutineForm: false,
+                tableGroup: true,
+                tableVersionList: false,
+              });
+              console.log("test2");
+              console.log(
+                "showSkinFormRoutine -> ",
+                showSkinFormRoutine
+              );
+            }}
+          >
             Back
           </Button>
           <p>Item Detail:</p>
 
-          <VersionList groups={selectedItem} />
+          <VersionList groups={selectedGroup} />
         </div>
       )}
       {/* Render SkinRoutineForm if showSkinRoutineForm is true */}
