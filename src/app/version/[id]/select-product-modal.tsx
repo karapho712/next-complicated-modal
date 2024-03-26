@@ -14,7 +14,15 @@ import { useFetchProducts } from "@/hooks/user/useFetchProduct";
 import Image from "next/image";
 import React, { useState } from "react";
 import { Product, ProductGroup } from "../../../../types";
-import { clone, has, omit, values } from "lodash";
+import {
+  clone,
+  cloneDeep,
+  countBy,
+  has,
+  omit,
+  size,
+  values,
+} from "lodash";
 import { useFormContext } from "react-hook-form";
 
 export const SelectProductModal = ({
@@ -64,11 +72,15 @@ export const SelectProductModal = ({
                     setProductMap((prevState) => {
                       let newState = clone(prevState);
 
+                      // console.log(prevState);
+                      // console.log(newState);
+
                       if (e.valueOf() === true) {
                         newState[product.id] = {
                           product,
                           group,
                           comment: product.comment || "",
+                          order: size(newState),
                         };
                       } else {
                         newState = omit(

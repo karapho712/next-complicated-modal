@@ -1,0 +1,1 @@
+[26-march-2024] tidak bisa melakukan invalidatequeries karna terdapat perbedaan penggunaan params dan id pada querykey nya, solusi nya mungkin mengunakan konstan params yang akan di pass ke beberapa component child nya

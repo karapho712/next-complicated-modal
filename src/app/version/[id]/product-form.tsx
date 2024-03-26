@@ -72,6 +72,19 @@ export const ProductForm = () => {
                     </FormItem>
                   )}
                 />
+                <FormField
+                  control={formMethods.control}
+                  name={`items.${index}.order`}
+                  shouldUnregister={false}
+                  render={({ field }) => (
+                    <FormItem className="">
+                      <FormLabel>Order</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="text" />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
               </AccordionContent>
             </AccordionItem>
           </Accordion>

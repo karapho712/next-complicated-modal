@@ -26,23 +26,32 @@ import {
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
+import { useParams } from "next/navigation";
+import { useAddUserProduct } from "@/hooks/user/useAddUserProduct";
 
 export const SkinRoutineForm = () => {
-  const formMethods = useForm<UserProduct>({
+  const router = useParams<{ id: string }>();
+
+  const formMethods = useForm<
+    UserProduct & { user: object }
+  >({
     defaultValues: {
+      user: {
+        id: router.id,
+      },
       startAt: new Date(),
       group: ProductGroup.NIGHT,
       isPublished: false,
+      items: [],
     },
   });
 
-  // const [date, setDate] = useState<Date | undefined>(
-  //   new Date()
-  // );
+  const addUserProduct = useAddUserProduct();
 
   const onSubmit = async (data: any) => {
     // data.startAt = date;
     console.log(data);
+    await addUserProduct.mutateAsync(data);
     console.log("submitted");
   };
   return (

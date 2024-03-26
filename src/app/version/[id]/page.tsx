@@ -72,6 +72,7 @@ export const Page = ({
     useState(false);
 
   const [selectedItem, setSelectedItem] = useState<any>();
+  console.log(selectedItem);
 
   const handleShowTableVersionList = (item: any) => {
     setSelectedItem(item);
