@@ -1,46 +1,41 @@
-"use client";
-import { DataTable } from "@/app/_components/data-table";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useDeleteUserProduct } from "@/hooks/user/useDeleteUserProduct";
 import { useFetchUserProducts } from "@/hooks/user/useFetchUserProduct";
-import { CellContext } from "@tanstack/react-table";
-import { isEmpty } from "lodash";
+import { DataTable } from "@/app/_components/data-table";
 import { Pencil, Trash2 } from "lucide-react";
-import {
-  useParams,
-  usePathname,
-  useRouter,
-} from "next/navigation";
+import { useParams } from "next/navigation";
+import { ComponentType } from "./page";
 import router from "next/router";
-import React, { useState } from "react";
-import { SkinRoutineForm } from "./skin-routine-form";
+import { isEmpty } from "lodash";
 
 const ActionsColumn = ({
   info,
   setToUpdate,
-}: {
-  info: CellContext<any, any>;
-  setToUpdate: any;
+  setShowTable,
 }) => {
-  const router = useParams<{ id: string }>();
+  const { id } = useParams<{ id: string }>();
   const userProduct = info.row.original;
   const deleteUserProduct = useDeleteUserProduct(
     userProduct.id,
-    router.id
+    id
   );
+
   return (
     <>
       <Button
         variant="default"
         size="icon"
         className="bg-blue-500 mr-1"
-        onClick={() => setToUpdate(userProduct)}
+        onClick={() => {
+          setToUpdate(userProduct);
+          setShowTable({
+            component: ComponentType.FORMSKINROUTINE,
+            prevComponent: ComponentType.TABLEVERSIONLIST,
+          });
+        }}
       >
-        <Pencil
-          aria-label="delete"
-          color="white"
-          // eslint-disable-next-line no-restricted-globals, no-alert
-        />
+        <Pencil aria-label="edit" color="white" />
       </Button>
 
       <Button
@@ -53,49 +48,36 @@ const ActionsColumn = ({
           ) && deleteUserProduct.mutateAsync()
         }
       >
-        <Trash2
-          aria-label="delete"
-          // className="red-"
-          color="white"
-          // eslint-disable-next-line no-restricted-globals, no-alert
-        />
+        <Trash2 aria-label="delete" color="white" />
       </Button>
     </>
   );
 };
 
-export const VersionList = ({
-  groups,
-}: {
-  groups: any;
-}) => {
-  const router = useParams<{ id: string }>();
+export const VersionList = ({ groups, setShowTable }) => {
+  const { id } = useParams<{ id: string }>();
 
-  const userId = router.id || "";
   const params = {
     page: 1,
-    limit: 999, // TODO: no limit
-    userId,
+    limit: 999,
+    userId: id || "",
     group: groups,
   };
 
   const { data, isFetching } = useFetchUserProducts(params);
-
   const [showSkinRoutineForm, setShowSkinRoutineForm] =
     useState({});
-
-  console.log(showSkinRoutineForm);
+  console.log(!isEmpty(showSkinRoutineForm));
 
   return (
     <div>
-      {isEmpty(showSkinRoutineForm) && (
+      {isEmpty(showSkinRoutineForm) && !isFetching && (
         <DataTable
           data={data}
           columns={[
             {
               header: "Version",
               id: "index",
-              // eslint-disable-next-line no-unsafe-optional-chaining
               cell: (p) =>
                 p?.table?.getSortedRowModel()?.flatRows
                   ?.length - p.row.index,
@@ -113,31 +95,25 @@ export const VersionList = ({
             {
               header: "Published",
               accessorKey: "isPublished",
-              cell: (info) =>
-                info.getValue() ? (
-                  <p>Benar</p>
-                ) : (
-                  <p>Salah</p>
-                ),
+              cell: (info) => (
+                <p>{info.getValue() ? "Benar" : "Salah"}</p>
+              ),
             },
-            // Add more columns as needed
             {
               id: "actions",
               header: "ACTIONS",
               accessorKey: "id",
-              // eslint-disable-next-line react/no-unstable-nested-components
               cell: (info) => (
                 <ActionsColumn
-                  key={info.row.id}
                   info={info}
                   setToUpdate={setShowSkinRoutineForm}
+                  setShowTable={setShowTable}
                 />
               ),
             },
           ]}
         />
       )}
-      {/* {!isEmpty(showSkinRoutineForm) && <SkinRoutineForm />} */}
     </div>
   );
 };

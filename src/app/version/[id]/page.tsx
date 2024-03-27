@@ -1,72 +1,45 @@
 "use client";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useFetchUserProducts } from "@/hooks/user/useFetchUserProduct";
 import { useFetchUserProductType } from "@/hooks/user/useFetchUserProductType";
-import { useFetchUsers } from "@/hooks/user/useFetchUsers";
-import { ColumnDef } from "@tanstack/react-table";
-import { ArrowLeft, Plus, PlusCircle } from "lucide-react";
-import React, { useMemo, useState } from "react";
-import {
-  User,
-  UserProduct,
-  UserProductItem,
-} from "../../../../types";
 import { DataTable } from "../../_components/data-table";
 import { SkinRoutineForm } from "./skin-routine-form";
 import { VersionList } from "./version-list";
+import { ColumnDef } from "@tanstack/react-table";
+import { ArrowLeft, PlusCircle } from "lucide-react";
+import { UserProduct } from "../../../../types";
 
-export const Page = ({
-  params,
+export enum ComponentType {
+  FORMSKINROUTINE = "FORMSKINROUTINE",
+  TABLEGROUP = "TABLEGROUP",
+  TABLEVERSIONLIST = "TABLEVERSIONLIST",
+}
+
+const Page = ({
+  params: { id },
 }: {
   params: { id: string };
 }) => {
-  const [showTableGroup, setShowTableGroup] =
-    useState(true);
-  const [showTableVersionList, setShowTableVersionList] =
-    useState(false);
-  const [showSkinFormRoutine, setShowSkinFormRoutine] =
-    useState(false);
+  const [showTable, setShowTable] = useState<{
+    component: ComponentType;
+    prevComponent: ComponentType | undefined;
+  }>({
+    component: ComponentType.TABLEGROUP,
+    prevComponent: undefined,
+  });
 
   const [selectedGroup, setSelectedGroup] = useState<any>();
-  console.log(selectedGroup);
 
-  const handleShowTableVersionList = (item: any) => {
-    setSelectedGroup(item);
-    setShowTableGroup(false);
-    setShowTableVersionList(true);
-  };
-
-  // Function to handle hiding item details
-  const handleShowTableGroup = () => {
-    setSelectedGroup(undefined);
-    setShowTableGroup(true);
-    setShowTableVersionList(false);
-  };
-
-  // Function to handle showing SkinRoutineForm and hiding DataTable
-  const handleShowTableAndForm = ({
-    skinRoutineForm,
-    tableGroup,
-    tableVersionList,
-    selectedGroup,
-  }: {
-    skinRoutineForm: boolean;
-    tableGroup: boolean;
-    tableVersionList: boolean;
-    selectedGroup: any;
-  }) => {
-    setSelectedGroup(selectedGroup);
-    setShowSkinFormRoutine(skinRoutineForm);
-    setShowTableGroup(tableGroup);
-    setShowTableVersionList(tableVersionList);
-  };
+  useEffect(() => {
+    console.log(showTable);
+  }, [showTable]);
 
   const columns: ColumnDef<UserProduct>[] = [
     {
       accessorKey: "id",
       cell: (info) => info.getValue(),
     },
-
     {
       header: "Group",
       accessorKey: "group",
@@ -81,110 +54,112 @@ export const Page = ({
       id: "actiongroup",
       header: "Action",
       accessorKey: "group",
-      cell: (info) => {
-        return (
-          <Button
-            onClick={() => {
-              console.log(info.getValue());
-
-              return handleShowTableAndForm({
-                tableVersionList: true,
-                skinRoutineForm: false,
-                tableGroup: false,
-                selectedGroup: info.getValue(),
-              });
-            }}
-          >
-            Show Item
-          </Button>
-        );
-      },
+      cell: (info) => (
+        <Button
+          onClick={() => {
+            setShowTable({
+              component: ComponentType.TABLEVERSIONLIST,
+              prevComponent: ComponentType.TABLEGROUP,
+            });
+            setSelectedGroup(info.getValue());
+          }}
+        >
+          Show Item
+        </Button>
+      ),
     },
   ];
 
   const paramsx = {
     page: 1,
     limit: 999,
-    userId: params.id,
+    userId: id,
   };
 
   const { data, isFetching } =
     useFetchUserProductType(paramsx);
 
   if (isFetching) {
-    return (
-      <>
-        <p>Loading</p>
-      </>
-    );
+    return <p>Loading</p>;
   }
-
-  console.log(selectedGroup);
 
   return (
     <div className="p-2">
       <div className="flex justify-center">
-        {/* <div className="bg-red-300">Component</div> */}
-        <div className="">
-          <Button
-            onClick={() => {
-              handleShowTableAndForm({
-                skinRoutineForm: !showSkinFormRoutine,
-                tableGroup: showSkinFormRoutine,
-                tableVersionList: false,
-                selectedGroup: undefined,
-              });
-            }}
-            className="bg-slate-900"
-          >
-            {showSkinFormRoutine ? (
-              <ArrowLeft className="mr-1" />
-            ) : (
-              <PlusCircle className="mr-1" />
-            )}
-            {showSkinFormRoutine ? "Back" : "New Routine"}
-          </Button>
-        </div>
+        <Button
+          onClick={() => {
+            setShowTable((prev) => {
+              if (
+                prev.component ===
+                ComponentType.FORMSKINROUTINE
+              ) {
+                return {
+                  component:
+                    prev.prevComponent ===
+                    ComponentType.TABLEGROUP
+                      ? ComponentType.TABLEGROUP
+                      : ComponentType.TABLEVERSIONLIST,
+                  prevComponent: undefined,
+                };
+              } else {
+                return {
+                  component: ComponentType.FORMSKINROUTINE,
+                  prevComponent:
+                    prev.component ===
+                    ComponentType.TABLEVERSIONLIST
+                      ? ComponentType.TABLEVERSIONLIST
+                      : ComponentType.TABLEGROUP,
+                };
+              }
+            });
+          }}
+          className="bg-slate-900"
+        >
+          {showTable.component ===
+          ComponentType.FORMSKINROUTINE ? (
+            <ArrowLeft className="mr-1" />
+          ) : (
+            <PlusCircle className="mr-1" />
+          )}
+          {showTable.component ===
+          ComponentType.FORMSKINROUTINE
+            ? "Back"
+            : "New Routine"}
+        </Button>
       </div>
-      {/* Main DataTable */}
-      {showTableGroup && (
+      {showTable.component === ComponentType.TABLEGROUP && (
         <DataTable data={data} columns={columns} />
       )}
-      {showTableVersionList && (
+      {showTable.component !== ComponentType.TABLEGROUP && (
+        <Button
+          onClick={() => {
+            setShowTable({
+              component:
+                showTable.component ===
+                ComponentType.TABLEVERSIONLIST
+                  ? ComponentType.TABLEGROUP
+                  : ComponentType.TABLEVERSIONLIST,
+              prevComponent: ComponentType.TABLEGROUP,
+            });
+          }}
+        >
+          Back
+        </Button>
+      )}
+      {showTable.component ===
+        ComponentType.TABLEVERSIONLIST && (
         <div>
-          <Button
-            onClick={() => {
-              console.log("test");
-              // let handleTableVersionList = false;
-              // let handleTableGroup = false;
-
-              // if (selectedGroup) {
-              //   console.log(selectedGroup);
-              //   handleTableVersionList = true;
-              // }
-
-              handleShowTableAndForm({
-                selectedGroup: undefined,
-                skinRoutineForm: false,
-                tableGroup: true,
-                tableVersionList: false,
-              });
-              console.log("test2");
-              console.log(
-                "showSkinFormRoutine -> ",
-                showSkinFormRoutine
-              );
-            }}
-          >
-            Back
-          </Button>
           <p>Item Detail:</p>
-
-          <VersionList groups={selectedGroup} />
+          <VersionList
+            groups={selectedGroup}
+            setShowTable={setShowTable}
+          />
         </div>
       )}
-      {/* Render SkinRoutineForm if showSkinRoutineForm is true */}
-      {showSkinFormRoutine && <SkinRoutineForm />}
+      {showTable.component ===
+        ComponentType.FORMSKINROUTINE && (
+        <SkinRoutineForm />
+      )}
     </div>
   );
 };
